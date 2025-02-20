@@ -1,8 +1,8 @@
 package com.sparta.delivery.config;
 
 
-import com.sparta.delivery.config.jwt.JwtAuthenticationFilter;
-import com.sparta.delivery.config.jwt.JwtUtil;
+import com.sparta.delivery.config.filter.JwtAuthenticationFilter;
+import com.sparta.delivery.domain.token.service.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +43,7 @@ public class SecurityConfig {
                 authorizationHttpRequest
                         .requestMatchers("/api/user/signup").permitAll() // 회원 가입 및 로그인은 접근 허가
                         .requestMatchers("/api/user/signin").permitAll()
+                        .requestMatchers("/api/token/reissue").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
                 );

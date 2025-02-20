@@ -1,4 +1,4 @@
-package com.sparta.delivery.config.jwt;
+package com.sparta.delivery.domain.token.service;
 
 import com.sparta.delivery.domain.user.enums.UserRoles;
 import io.jsonwebtoken.Claims;
@@ -15,13 +15,12 @@ import java.util.Date;
 public class JwtUtil {
 
     private final SecretKey secretKey;
-    private final Long expiredMs;
 
-    public JwtUtil(@Value("${spring.jwt.secret}") String secretKey,
-                   @Value("${spring.jwt.validityInMilliseconds}") Long expiredMs) {
+
+    public JwtUtil(@Value("${spring.jwt.secret}") String secretKey) {
         this.secretKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8),
                 Jwts.SIG.HS256.key().build().getAlgorithm());
-        this.expiredMs = expiredMs;
+
     }
 
     public String getUsername(String token){
@@ -39,14 +38,23 @@ public class JwtUtil {
         return claims.get("email",String.class);
     }
 
+    //토큰 판단용
+    public String getCategory(String token){
+        Claims claims = parseClaims(token);
+        return claims.get("category",String.class);
+    }
+
     public boolean isExpired(String token) {
         Claims claims = parseClaims(token); // Claims 파싱
-        return claims.getExpiration().before(new Date()); // 만료 체크
+        return claims.getExpiration().before(new Date()); // 만료 체크, 만료 시 true
     }
 
 
-    public String createJwt(String username, String email ,UserRoles role){
+
+
+    public String createJwt(String category , String username, String email ,UserRoles role, Long expiredMs){
         return Jwts.builder()
+                .claim("category",category)
                 .claim("username",username)
                 .claim("email",email)
                 .claim("role",role.name())

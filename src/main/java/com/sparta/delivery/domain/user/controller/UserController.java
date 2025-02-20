@@ -3,8 +3,11 @@ package com.sparta.delivery.domain.user.controller;
 import com.sparta.delivery.config.auth.PrincipalDetails;
 import com.sparta.delivery.domain.user.dto.*;
 import com.sparta.delivery.domain.user.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,15 +38,38 @@ public class UserController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser (@RequestBody @Valid LoginRequestDto loginRequestDto, BindingResult bindingResult){
+    public ResponseEntity<?> authenticateUser (@RequestBody @Valid LoginRequestDto loginRequestDto,
+                                               BindingResult bindingResult,
+                                               HttpServletResponse response){
 
         if (bindingResult.hasErrors()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ValidationErrorResponse(bindingResult));
         }
+        JwtResponseDto jwtResponseDto = userService.authenticateUser(loginRequestDto);
+
+        String accessToken = jwtResponseDto.getAccessToken();
+        String refreshToken = jwtResponseDto.getRefreshToken();
+
+        response.addCookie(createCookie("refresh", refreshToken));
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userService.authenticateUser(loginRequestDto));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> removeRefreshToken(@CookieValue(name = "refresh", defaultValue = "")String refreshToken){
+
+        if (refreshToken.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Refresh token not found in cookies");
+        }
+
+        userService.removeRefreshToken(refreshToken);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .build();
     }
 
     @GetMapping("/{id}")
@@ -113,5 +139,16 @@ public class UserController {
                 "error", "Validation Field",
                 "message", errors
         );
+    }
+
+    // 쿠키 생성 메소드
+    private Cookie createCookie(String key, String value) {
+
+        Cookie cookie = new Cookie(key, value); // 쿠키 객체 생성
+        cookie.setMaxAge(24 * 60 * 60); // 쿠키의 유효 기간 설정 (60시간)
+        // cookie.setSecure(true); // https 환경에서만 쿠키 사용
+        cookie.setPath("/"); // 모든 경로에서 쿠키 사용 가능
+        cookie.setHttpOnly(true); // 자바스크립트에서 쿠키 접근 불가
+        return cookie; // 생성한 쿠키 반환
     }
 }

@@ -5,7 +5,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.sparta.delivery.config.auth.PrincipalDetails;
 import com.sparta.delivery.config.global.exception.custom.ForbiddenException;
 import com.sparta.delivery.config.global.exception.custom.UserNotFoundException;
-import com.sparta.delivery.config.jwt.JwtUtil;
+import com.sparta.delivery.domain.token.service.JwtUtil;
 import com.sparta.delivery.domain.user.dto.*;
 import com.sparta.delivery.domain.user.entity.User;
 import com.sparta.delivery.domain.user.enums.UserRoles;
@@ -117,7 +117,7 @@ public class UserServiceTest {
 
         when(userRepository.findByUsernameAndDeletedAtIsNull("newuser")).thenReturn(Optional.of(newUser));
         when(passwordEncoder.matches("password", newUser.getPassword())).thenReturn(true);
-        when(jwtUtil.createJwt(anyString(), anyString(), any(UserRoles.class))).thenReturn("accessToken");
+        when(jwtUtil.createJwt(anyString(), anyString(), anyString(), any(UserRoles.class),1000L)).thenReturn("accessToken");
 
         // When
         JwtResponseDto response = userService.authenticateUser(loginRequestDto);

@@ -41,11 +41,9 @@ public class User extends Timestamped {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DeliveryAddress> deliveryAddresses = new ArrayList<>();
 
-
     public void addDeliveryAddress(DeliveryAddress deliveryAddress){
         this.deliveryAddresses.add(deliveryAddress);
     }
-
 
     public UserResDto toResponseDto() {
 

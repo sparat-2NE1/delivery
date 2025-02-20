@@ -1,6 +1,8 @@
-package com.sparta.delivery.config.jwt;
+package com.sparta.delivery.config.filter;
 
 import com.sparta.delivery.config.auth.PrincipalDetails;
+import com.sparta.delivery.config.global.exception.custom.InvalidTokenException;
+import com.sparta.delivery.domain.token.service.JwtUtil;
 import com.sparta.delivery.domain.user.entity.User;
 import com.sparta.delivery.domain.user.enums.UserRoles;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -50,6 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> excludeUrls = List.of(
             "/api/user/signup",
             "/api/user/signin",
+            "/api/token/reissue",
             "/swagger-ui/**",
             "/v3/api-docs/**"
     );
@@ -84,6 +87,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             jwtUtil.isExpired(accessToken);
 
+            if (!jwtUtil.getCategory(accessToken).equals("access")){
+                throw new InvalidTokenException("Invalid token category. Expected 'access' token.");
+            }
+
             String username = jwtUtil.getUsername(accessToken);
             String email = jwtUtil.getEmail(accessToken);
             String role = jwtUtil.getRole(accessToken);
@@ -107,7 +114,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             PrintWriter writer = response.getWriter();
-            writer.print("Access token expired");
+            writer.print("Access token expired 22");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         } catch (MalformedJwtException e) {
